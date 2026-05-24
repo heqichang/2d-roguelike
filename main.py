@@ -9,6 +9,7 @@ import tcod.event
 
 from game.constants import (
     SCREEN_WIDTH, SCREEN_HEIGHT, MAP_WIDTH, MAP_HEIGHT,
+    VIEWPORT_WIDTH, VIEWPORT_HEIGHT,
     MAX_MONSTERS_PER_ROOM
 )
 from game.dungeon_generator import DungeonGenerator
@@ -23,15 +24,17 @@ from game.renderer import Renderer
 
 class Game:
     def __init__(self):
-        self.tileset = tcod.tileset.CHARMAP_TCOD
-        self.context = tcod.context.new_terminal(
-            SCREEN_WIDTH, SCREEN_HEIGHT,
+        self.tileset = tcod.tileset.load_tilesheet(
+            "data/dejavu10x10_gs_tc.png", 32, 8, tcod.tileset.CHARMAP_TCOD
+        )
+        self.context = tcod.context.new(
+            columns=SCREEN_WIDTH,
+            rows=SCREEN_HEIGHT,
             title='2D Roguelike 地牢探险',
             tileset=self.tileset,
-            renderer=tcod.context.RENDERER_SDL2,
             vsync=True
         )
-        self.root_console = tcod.Console(SCREEN_WIDTH, SCREEN_HEIGHT, order='F')
+        self.root_console = tcod.console.Console(SCREEN_WIDTH, SCREEN_HEIGHT, order='F')
 
         self.dungeon = DungeonGenerator()
         self.player: Player = None
@@ -201,18 +204,21 @@ class Game:
 
                 stairs_x, stairs_y = self.dungeon.stairs_pos
                 if self.explored[stairs_x][stairs_y]:
-                    stair_char = '>'
-                    stair_color = (255, 255, 0)
-                    if self.visible[stairs_x][stairs_y]:
-                        self.root_console.print(
-                            stairs_x, stairs_y, stair_char,
-                            fg=stair_color, bg=(0, 0, 0)
-                        )
-                    else:
-                        self.root_console.print(
-                            stairs_x, stairs_y, stair_char,
-                            fg=(128, 128, 0), bg=(0, 0, 0)
-                        )
+                    screen_stairs_x = stairs_x - self.renderer.camera_x
+                    screen_stairs_y = stairs_y - self.renderer.camera_y
+                    if 0 <= screen_stairs_x < VIEWPORT_WIDTH and 0 <= screen_stairs_y < VIEWPORT_HEIGHT:
+                        stair_char = '>'
+                        stair_color = (255, 255, 0)
+                        if self.visible[stairs_x][stairs_y]:
+                            self.root_console.print(
+                                screen_stairs_x, screen_stairs_y, stair_char,
+                                fg=stair_color, bg=(0, 0, 0)
+                            )
+                        else:
+                            self.root_console.print(
+                                screen_stairs_x, screen_stairs_y, stair_char,
+                                fg=(128, 128, 0), bg=(0, 0, 0)
+                            )
 
             elif self.game_state == 'game_over':
                 self._render_game_over()
@@ -257,24 +263,30 @@ class Game:
     def _render_game_over(self) -> None:
         title = '游戏结束'
         msg1 = f'你到达了第 {self.floor_level} 层'
-        msg2 = '按回车键重新开始'
+        msg2 = f'最终等级: {self.player.level}'
+        msg3 = '按回车键或ESC重新开始'
 
         title_x = SCREEN_WIDTH // 2 - len(title) // 2
         msg1_x = SCREEN_WIDTH // 2 - len(msg1) // 2
         msg2_x = SCREEN_WIDTH // 2 - len(msg2) // 2
+        msg3_x = SCREEN_WIDTH // 2 - len(msg3) // 2
 
         self.root_console.clear(fg=(255, 255, 255), bg=(0, 0, 0))
 
         self.root_console.print(
-            title_x, SCREEN_HEIGHT // 2 - 2, title,
+            title_x, SCREEN_HEIGHT // 2 - 3, title,
             fg=(255, 0, 0), bg=(0, 0, 0)
         )
         self.root_console.print(
-            msg1_x, SCREEN_HEIGHT // 2, msg1,
+            msg1_x, SCREEN_HEIGHT // 2 - 1, msg1,
             fg=(255, 255, 255), bg=(0, 0, 0)
         )
         self.root_console.print(
-            msg2_x, SCREEN_HEIGHT // 2 + 2, msg2,
+            msg2_x, SCREEN_HEIGHT // 2, msg2,
+            fg=(0, 255, 255), bg=(0, 0, 0)
+        )
+        self.root_console.print(
+            msg3_x, SCREEN_HEIGHT // 2 + 2, msg3,
             fg=(255, 255, 0), bg=(0, 0, 0)
         )
 

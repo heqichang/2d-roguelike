@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Tuple, Optional
 import tcod.event
+from tcod.event import KeySym
 
 
 class InputHandler:
@@ -26,35 +27,35 @@ class InputHandler:
     def _handle_playing(self, event: tcod.event.KeyDown) -> Optional[dict]:
         key = event.sym
 
-        if key in (tcod.event.K_UP, tcod.event.K_k, tcod.event.K_w):
+        if key in (KeySym.UP, KeySym.K, KeySym.W):
             return {'move': (0, -1)}
-        elif key in (tcod.event.K_DOWN, tcod.event.K_j, tcod.event.K_s):
+        elif key in (KeySym.DOWN, KeySym.J, KeySym.S):
             return {'move': (0, 1)}
-        elif key in (tcod.event.K_LEFT, tcod.event.K_h, tcod.event.K_a):
+        elif key in (KeySym.LEFT, KeySym.H, KeySym.A):
             return {'move': (-1, 0)}
-        elif key in (tcod.event.K_RIGHT, tcod.event.K_l, tcod.event.K_d):
+        elif key in (KeySym.RIGHT, KeySym.L, KeySym.D):
             return {'move': (1, 0)}
-        elif key in (tcod.event.K_y,):
+        elif key in (KeySym.Y,):
             return {'move': (-1, -1)}
-        elif key in (tcod.event.K_u,):
+        elif key in (KeySym.U,):
             return {'move': (1, -1)}
-        elif key in (tcod.event.K_b,):
+        elif key in (KeySym.B,):
             return {'move': (-1, 1)}
-        elif key in (tcod.event.K_n,):
+        elif key in (KeySym.N,):
             return {'move': (1, 1)}
 
-        if key in (tcod.event.K_RETURN, tcod.event.K_KP_ENTER):
+        if key in (KeySym.RETURN, KeySym.KP_ENTER):
             pass
 
-        if key in (tcod.event.K_ESCAPE,):
+        if key in (KeySym.ESCAPE,):
             return {'action': 'exit'}
 
-        if key in (tcod.event.K_PERIOD,):
+        if key in (KeySym.PERIOD,):
             return {'action': 'wait'}
 
         return {}
 
     def _handle_game_over(self, event: tcod.event.KeyDown) -> Optional[dict]:
-        if event.sym in (tcod.event.K_RETURN, tcod.event.K_KP_ENTER, tcod.event.K_ESCAPE):
+        if event.sym in (KeySym.RETURN, KeySym.KP_ENTER, KeySym.ESCAPE):
             return {'action': 'restart'}
         return {}
